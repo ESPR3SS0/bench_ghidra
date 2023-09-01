@@ -1,7 +1,7 @@
 
 
 
-## Ghidra installation 
+## Ghidra installation (Linux)
 
 First - I have a setup script that does the whole 
         installation. I recommend using that and 
@@ -14,7 +14,6 @@ github repo.
 In summary download the latest release file, unzip 
 the file, and run! jre-17 needs to be installed to 
 run too! 
-
 
 
 Step by step installation:
@@ -37,7 +36,22 @@ wget https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_1
 unzip ghidra_10.3.3_PUBLIC_20230829.zip
 ```
 
-## Ghidra command line tool 
+
+## Ghidra installation windows 
+
+Windows is alittle harder because ghidra needs 
+jdk17+ to run. 
+
+The directions at the github repo (a link)[https://github.com/NationalSecurityAgency/ghidra] 
+advise to download jdk17+ from adoptium.
+
+Link to adoptium: [https://adoptium.net/temurin/releases]
+
+After install jdk17++ download the latest ghidra 
+release zipfile from [https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_10.3.3_build/ghidra_10.3.3_PUBLIC_20230829.zip]
+
+
+## Ghidra command line tool... analyzeHeadless
 
 The commandline tool that is used for analysis without a GUI is at exactly:
 ```
@@ -118,6 +132,8 @@ command again with the same proj_path and proj_name requirement.
 ghidra will not overwrite the existing project and the command 
 would fail
 
+After install jdk17+ on windows a reboot may be 
+needed
 
 
 
