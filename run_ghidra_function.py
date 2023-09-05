@@ -7,7 +7,11 @@ from alive_progress import alive_it
 import json
 
 import sys
-#sys.path.append('/home/rest/RHEST/util_dev/ripbin')
+sys.path.append('/home/rest/binary_analysis/ripkit')
+from ripkit.ripkit.cargo_picky import (
+  is_executable,
+)
+
 #
 #
 #from ripbin import (
@@ -19,7 +23,7 @@ import sys
 def run_ghidra(bin_path: Path, 
                post_script: Path,
                script_path: Path = Path("~/ghidra_scripts/").expanduser(),
-               analyzer: Path = Path("~/ghidra/ghidra_10.3.2_PUBLIC/support/analyzeHeadless").expanduser().resolve(),):
+               analyzer: Path = Path("~/ghidra_10.3.2_PUBLIC/support/analyzeHeadless").expanduser().resolve(),):
     '''
     Run the analyze headless mode with ghidra
     '''
@@ -199,21 +203,23 @@ def open_and_read_log(log_path: Path = Path("GHIDRA_BENCH_RESULTS.json")):
 
 
 if __name__ == "__main__":
-    open_and_read_log()
-    exit(1)
-
+    #open_and_read_log()
+    #exit(1)
 
 
     # Get all the rust pgks 
-    reg = get_registry()
+    #reg = get_registry()
 
     # Get the rust files package paths
     #files_list = set(reg[reg['prog_lang'] == 'rust']['package_path'].to_list())
     #files_list = set(reg[reg['prog_lang'] == 'rust']['bin_path'].to_list())
 
-    rust_reg = reg[reg['prog_lang'] == 'rust']
-    rust_reg['bin_full_path'] = rust_reg['package_path'] + '/' + rust_reg['binary_name']
-    rust_bins = [Path(x).resolve() for x in rust_reg['bin_full_path'].to_list()]
+    #rust_reg = reg[reg['prog_lang'] == 'rust']
+    #rust_reg['bin_full_path'] = rust_reg['package_path'] + '/' + rust_reg['binary_name']
+    #rust_bins = [Path(x).resolve() for x in rust_reg['bin_full_path'].to_list()]
+
+    # All binaries are in there pkg dir and are exe
+    rust_bins = [x for x in Path("/home/ryan/.ripbin/ripped_bins/").iterdir() if is_executable(x)]
 
     total_results = []
     LOG_FILE = Path("GHIDRA_BENCH_RESULTS.json")
