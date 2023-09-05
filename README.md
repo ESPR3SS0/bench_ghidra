@@ -21,6 +21,7 @@ Step by step installation:
 1. Installed dependencies:
 ```bash
 sudo apt install -y openjdk-17-jre
+sudo apt install -y openjdk-17-jdk
 sudo apt install -y wget 
 sudo apt install -y unzip
 ```
