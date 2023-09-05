@@ -102,7 +102,7 @@ def ghidra_bench_functions(bin_path: Path,
     post_script: Path = Path("~/ghidra_scripts/List_Function_and_Entry.py").expanduser(),
     script_path: Path = Path("~/ghidra_scripts/").expanduser(),
     analyzer: Path = 
-    Path("~/ghidra/ghidra_10.3.2_PUBLIC/support/analyzeHeadless").expanduser().resolve()
+    Path("~/ghidra_10.3.2_PUBLIC/support/analyzeHeadless").expanduser().resolve()
                            ):
 
     # Run ghidra on unstripped binary and get function list
