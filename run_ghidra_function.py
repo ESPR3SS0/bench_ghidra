@@ -7,8 +7,8 @@ from alive_progress import alive_it
 import json
 
 import sys
-sys.path.append('/home/rest/binary_analysis/ripkit')
-from ripkit.ripkit.cargo_picky import (
+#sys.path.append('/home/rest/binary_analysis/ripkit')
+from ripkit.cargo_picky import (
   is_executable,
 )
 
@@ -23,7 +23,7 @@ from ripkit.ripkit.cargo_picky import (
 def run_ghidra(bin_path: Path, 
                post_script: Path,
                script_path: Path = Path("~/ghidra_scripts/").expanduser(),
-               analyzer: Path = Path("~/ghidra_10.3.2_PUBLIC/support/analyzeHeadless").expanduser().resolve(),):
+               analyzer: Path = Path("~/ghidra_10.3.3_PUBLIC/support/analyzeHeadless").expanduser().resolve(),):
     '''
     Run the analyze headless mode with ghidra
     '''
@@ -102,7 +102,7 @@ def ghidra_bench_functions(bin_path: Path,
     post_script: Path = Path("~/ghidra_scripts/List_Function_and_Entry.py").expanduser(),
     script_path: Path = Path("~/ghidra_scripts/").expanduser(),
     analyzer: Path = 
-    Path("~/ghidra_10.3.2_PUBLIC/support/analyzeHeadless").expanduser().resolve()
+    Path("~/ghidra_10.3.3_PUBLIC/support/analyzeHeadless").expanduser().resolve()
                            ):
 
     # Run ghidra on unstripped binary and get function list
@@ -219,7 +219,8 @@ if __name__ == "__main__":
     #rust_bins = [Path(x).resolve() for x in rust_reg['bin_full_path'].to_list()]
 
     # All binaries are in there pkg dir and are exe
-    rust_bins = [x for x in Path("/home/ryan/.ripbin/ripped_bins/").iterdir() if is_executable(x)]
+    rust_bins = [x for x in Path("/home/ryan/.ripbin/ripped_bins/").rglob('*') if (x.name!="info.csv" and x.is_file())]
+    #rust_bins = [x for x in rust_pkgs if is_executable(x)]
 
     total_results = []
     LOG_FILE = Path("GHIDRA_BENCH_RESULTS.json")
