@@ -1,6 +1,9 @@
 from pathlib import Path
 import re
 
+import matplotlib.pyplot as plt
+
+
 import subprocess
 import shutil
 from alive_progress import alive_it
@@ -28,17 +31,10 @@ def run_ghidra(bin_path: Path,
     Run the analyze headless mode with ghidra
     '''
     
-    #cmd_str = f"{analyzer.parent}/./{analyzer.name} /tmp tmp_proj -import {bin_path} -scriptPath {script_path} -postScript {post_script.name}"
-
-    #res = subprocess.run([f"{analyzer.parent}/./{analyzer.name}", "--help"],
-    #                         capture_output=True,
-    #                        text=True)
-
     cmd_str = [f"{analyzer.parent}/./{analyzer.name}", "/tmp", "tmp_proj",
                "-import", f"{bin_path}", "-scriptPath", f"{script_path}",
                "-postScript", f"{post_script.name}",
-               "-noanalysis"]
-    print(cmd_str)
+               ]
     try:
         paths_to_remove = ["tmp_proj.rep", "tmp_proj.gpr"]
         paths_to_remove = [Path("/tmp") / Path(x) for x in paths_to_remove]
@@ -48,6 +44,7 @@ def run_ghidra(bin_path: Path,
                     shutil.rmtree(path)
                 else:
                     path.unlink()
+
 
         output = subprocess.run(cmd_str, text=True,
                                 capture_output=True,
@@ -106,6 +103,7 @@ def ghidra_bench_functions(bin_path: Path,
                            ):
 
     # Run ghidra on unstripped binary and get function list
+    print(f"Running on binary {bin_path}")
     nonstrip_res = run_ghidra(bin_path , post_script, script_path, analyzer)
     nonstrip_funcs = parse_for_functions(nonstrip_res.stdout)
 
@@ -120,13 +118,13 @@ def ghidra_bench_functions(bin_path: Path,
         print("Error running command:", e)
         return []
 
+    print(f"Running on {bin_path.name} stripped")
     # Run ghidra on stripped bin and get function list
     strip_res = run_ghidra(strip_bin , post_script, script_path, analyzer)
     strip_funcs = parse_for_functions(strip_res.stdout)
 
     # Delete the stripped binary
     strip_bin.unlink()
-
 
     # Get the number of unique functions to each
     unique_nonstrip, unique_strip = function_list_comp(nonstrip_funcs, 
@@ -147,6 +145,7 @@ def open_and_read_log(log_path: Path = Path("GHIDRA_BENCH_RESULTS.json")):
 
     false_negatives = 0
     true_positives = 0
+    total_funcs = 0
     for bin_name, bin_data in data.items():
         if bin_data['strip_unique_funcs'] != 0:
             # From initial testing the stripped binary never had any functions 
@@ -168,6 +167,8 @@ def open_and_read_log(log_path: Path = Path("GHIDRA_BENCH_RESULTS.json")):
 
         true_positives += bin_data['strip_funcs']
 
+        total_funcs += bin_data['nonstrip_funcs']
+
 
             #'nonstrip_funcs': len(res[0][0]),
             #'nonstrip_unique_funcs': len(res[0][1]), - functions that were in nonstrip but not in strip
@@ -177,59 +178,69 @@ def open_and_read_log(log_path: Path = Path("GHIDRA_BENCH_RESULTS.json")):
     recall =  true_positives / (true_positives + false_negatives)
     print("Stats:")
     print("==================")
+    print(f"Number of functions: {total_funcs}")
+    print(f"Funcs identified: {true_positives}")
     print(f"Number of files: {len(data.keys())}")
     print("Precision", 1)
     print(f"Recall: {recall}")
-    print(f"F1: {(2*1*recall)/(1+recall)}")
+    f1 =  (2*1*recall)/(1+recall)
+    print(f"F1: {f1}")
 
 
+    plt = create_dual_plots(1, recall, f1, true_positives, total_funcs,
+                            ['Precision', 'Recall', 'F1'],
+                            ['Found','Not Found'])
 
-        #for line in f.readlines():
-        #    #  a line is:
-        #    # binary file: [(nonstrip_funcs, unique_nonstrip),
-        #    #                (srtip_funcs, unique_strip)] 
-
-        #    #res.append(line.strip())
-        #    data = line.split(':')[1]
-
-        #    # Split into two section, the first tuple and the second tuple
-        #    first_tup, second_tup = data.split(')')
-
-        #    split_by_lp = line.split('(')
-        #    split_by_rp = [x.split(')') for x in split_by_lp]
+    plt.savefig("dual_plot")
     return 
+
+def create_dual_plots(bar_value1, bar_value2, bar_value3, pie_found, pie_total, labels_bar, labels_pie):
+    # Create a figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Bar chart
+    values = [bar_value1, bar_value2, bar_value3]
+    #labels = ['Value 1', 'Value 2', 'Value 3']
+    labels = labels_bar
+    ax1.bar(labels, values)
+    ax1.set_xlabel('Metrics')
+    ax1.set_ylabel('Score')
+    ax1.set_title('Bar Chart')
+
+    # Pie chart
+    sizes = [pie_found, pie_total - pie_found]
+    labels = labels_pie
+    ax2.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+    ax2.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    ax2.set_title('Pie Chart')
+
+    # Display the plots
+    plt.tight_layout()
+    return plt
+
+
+
 
 
 
 
 if __name__ == "__main__":
-    #open_and_read_log()
-    #exit(1)
-
-
-    # Get all the rust pgks 
-    #reg = get_registry()
-
-    # Get the rust files package paths
-    #files_list = set(reg[reg['prog_lang'] == 'rust']['package_path'].to_list())
-    #files_list = set(reg[reg['prog_lang'] == 'rust']['bin_path'].to_list())
-
-    #rust_reg = reg[reg['prog_lang'] == 'rust']
-    #rust_reg['bin_full_path'] = rust_reg['package_path'] + '/' + rust_reg['binary_name']
-    #rust_bins = [Path(x).resolve() for x in rust_reg['bin_full_path'].to_list()]
+    open_and_read_log()
+    exit(1)
 
     # All binaries are in there pkg dir and are exe
-    rust_bins = [x for x in Path("/home/ryan/.ripbin/ripped_bins/").rglob('*') if (x.name!="info.csv" and x.is_file())]
+    rust_bins = [x for x in Path("/home/ryan/.ripbin/ripped_bins/").rglob('*') if (x.name!="info.json" and "npz" not in x.name and x.is_file())]
     #rust_bins = [x for x in rust_pkgs if is_executable(x)]
 
     total_results = []
     LOG_FILE = Path("GHIDRA_BENCH_RESULTS.json")
+    LOG_FILE.touch()
 
     for bin_path in alive_it(rust_bins):
-        print(bin_path)
         if not bin_path.exists():
             continue
 
+        print(f"Running ghidra on binary {bin_path.name}")
         res =  ghidra_bench_functions(bin_path)
         total_results.append(res)
 
@@ -244,6 +255,8 @@ if __name__ == "__main__":
             'strip_funcs': len(res[1][0]),
             'strip_unique_funcs': len(res[1][1]),
         }
+        for k, v in data.items():
+            print(f"{k} = {v}")
 
         try:
             with open(LOG_FILE,'r') as f:
